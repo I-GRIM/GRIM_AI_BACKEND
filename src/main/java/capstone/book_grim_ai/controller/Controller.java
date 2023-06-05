@@ -33,11 +33,12 @@ public class Controller {
     private final Logger log = LoggerFactory.getLogger(this.getClass().getSimpleName());
 
     @GetMapping
-    public String test(){
+    public String test() {
         return "this is test";
     }
 
-    @PostMapping(value = "",consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE}, produces = MediaType.IMAGE_JPEG_VALUE)
+    @PostMapping(value = "", consumes = { MediaType.APPLICATION_JSON_VALUE,
+            MediaType.MULTIPART_FORM_DATA_VALUE }, produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     public @ResponseBody byte[] createCharacter(
             @RequestPart(value = "prompt") String prompt,
@@ -49,12 +50,13 @@ public class Controller {
             // ControlNet 돌리기
             File file = new File("/home/origin_img/" + img.getOriginalFilename());
             img.transferTo(file);
-            if(file.exists()){
+            if (file.exists()) {
                 log.debug("file exist!");
             }
             log.debug("created image file...");
             File logs = new File("/home/origin_img/log");
-            ProcessBuilder pb = new ProcessBuilder("sudo","python3.10", "/home/ControlNet-with-Anything-v4/book_grim.py", "-img", file.getPath(),"-p", prompt);
+            ProcessBuilder pb = new ProcessBuilder("sudo", "python3.10",
+                    "/home/ControlNet-with-Anything-v4/book_grim.py", "-img", file.getPath(), "-p", prompt);
             pb.redirectOutput(logs);
             pb.redirectError(logs);
             Process controlnet = pb.start();
@@ -73,11 +75,11 @@ public class Controller {
         return bytes;
     }
 
-    @PostMapping(value ="/remove",consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE}, produces = MediaType.IMAGE_JPEG_VALUE)
+    @PostMapping(value = "/remove", consumes = { MediaType.APPLICATION_JSON_VALUE,
+            MediaType.MULTIPART_FORM_DATA_VALUE }, produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     public @ResponseBody byte[] removeBack(
-            @RequestPart(value = "character") MultipartFile character
-    ) throws IOException {
+            @RequestPart(value = "character") MultipartFile character) throws IOException {
         String remove_charac_path;
         try {
 
@@ -94,9 +96,9 @@ public class Controller {
 
             File logs = new File(cache_image_path + "log");
 
-
             log.debug("remove character back_ground...");
-            ProcessBuilder rm = new ProcessBuilder("/usr/bin/python3", "/home/g0521sansan/image_processing/remove.py", charac_file.getPath());
+            ProcessBuilder rm = new ProcessBuilder("/usr/bin/python3", "/home/g0521sansan/image_processing/remove.py",
+                    charac_file.getPath());
             log.debug("check command : " + rm.command());
             log.debug("charac_file path : " + charac_file.getPath());
             rm.redirectOutput(logs);
@@ -106,11 +108,11 @@ public class Controller {
             remove.waitFor();
             log.debug("end remove...");
 
-            remove_charac_path = cache_image_path+FilenameUtils.removeExtension(character.getOriginalFilename())+"_rm."+FilenameUtils.getExtension(character.getOriginalFilename());
-            log.debug("cahe imge  path : "+ cache_image_path);
-            log.debug("charac name "+FilenameUtils.removeExtension(character.getOriginalFilename()));
-            log.debug("remomve charac path :" +remove_charac_path);
-
+            remove_charac_path = cache_image_path + FilenameUtils.removeExtension(character.getOriginalFilename())
+                    + "_rm." + FilenameUtils.getExtension(character.getOriginalFilename());
+            log.debug("cahe imge  path : " + cache_image_path);
+            log.debug("charac name " + FilenameUtils.removeExtension(character.getOriginalFilename()));
+            log.debug("remomve charac path :" + remove_charac_path);
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -121,15 +123,15 @@ public class Controller {
         return bytes;
     }
 
-    @PostMapping(value ="/createPage",consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE}, produces = MediaType.IMAGE_JPEG_VALUE)
+    @PostMapping(value = "/createPage", consumes = { MediaType.APPLICATION_JSON_VALUE,
+            MediaType.MULTIPART_FORM_DATA_VALUE }, produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     public @ResponseBody byte[] createPage(
             @RequestPart(value = "prompt") String prompt,
             @RequestPart(value = "back") MultipartFile back,
             @RequestPart(value = "character") MultipartFile character,
             @RequestPart(value = "x") int x,
-            @RequestPart(value = "y") int y
-    ) throws IOException {
+            @RequestPart(value = "y") int y) throws IOException {
 
         // image remove 하는 거 먼저 실행
         // 그 뒤에 merge
@@ -138,7 +140,7 @@ public class Controller {
 
             String cache_image_path = "/home/g0521sansan/image_processing/cache_img/";
 
-	        log.debug("cahe"+cache_image_path);
+            log.debug("cahe" + cache_image_path);
             log.debug("back img : " + back.getBytes());
             log.debug("back originalFileName : " + back.getOriginalFilename());
 
@@ -153,19 +155,22 @@ public class Controller {
 
             log.debug("created image file...");
             // dreambooth part
-//            ProcessBuilder pb = new ProcessBuilder("sudo","python3.10", "/home/ControlNet-with-Anything-v4/book_grim.py", "-img", file.getPath(),"-p", prompt);
-//            pb.redirectOutput(logs);
-//            pb.redirectError(logs);
-//            Process controlnet = pb.start();
-//            log.debug("start the process...");
-//            controlnet.waitFor();
-//            log.debug("end process...");
+            // ProcessBuilder pb = new ProcessBuilder("sudo","python3.10",
+            // "/home/ControlNet-with-Anything-v4/book_grim.py", "-img",
+            // file.getPath(),"-p", prompt);
+            // pb.redirectOutput(logs);
+            // pb.redirectError(logs);
+            // Process controlnet = pb.start();
+            // log.debug("start the process...");
+            // controlnet.waitFor();
+            // log.debug("end process...");
             log.debug("end create image");
 
-            File mlogs = new File(cache_image_path+"mlog");
+            File mlogs = new File(cache_image_path + "mlog");
 
             log.debug("merge image...");
-            ProcessBuilder mg = new ProcessBuilder("python3", "/home/g0521sansan/image_processing/merge.py", back_file.getPath(),charac_file.getPath(),Integer.toString(x),Integer.toString(y));
+            ProcessBuilder mg = new ProcessBuilder("python3", "/home/g0521sansan/image_processing/merge.py",
+                    back_file.getPath(), charac_file.getPath(), Integer.toString(x), Integer.toString(y));
             mg.redirectOutput(mlogs);
             mg.redirectError(mlogs);
             Process merge = mg.start();
@@ -176,38 +181,37 @@ public class Controller {
         } catch (InterruptedException e) {
             log.error(e.getMessage());
 
-	}
+        }
         byte[] bytes = Files.readAllBytes(Paths.get("/home/g0521sansan/image_processing/story.png"));
         log.debug("response... : " + bytes.toString());
 
         return bytes;
-	
+
     }
 
-    @PostMapping(value ="/checkGrammar",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/checkGrammar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     public @ResponseBody ArrayList<String> checkGrammar(
-            @RequestPart(value = "content") String content
-    ) throws IOException {
-        ProcessBuilder check = new ProcessBuilder("python3", "/home/g0521sansan/py-hanspell/korean_check.py", "--text",content);
+            @RequestPart(value = "content") String content) throws IOException {
+        ProcessBuilder check = new ProcessBuilder("python3", "/home/g0521sansan/py-hanspell/korean_check.py", "--text",
+                content);
         Process kocheck = check.start();
+        kocheck.waitFor();
         ArrayList<String> spellList = new ArrayList<String>();
 
-//        File file = new File("E:\\2023.1\\캡스톤\\py-hanspell\\spellList.txt");
+        // File file = new File("E:\\2023.1\\캡스톤\\py-hanspell\\spellList.txt");
         File file = new File("/home/g0521sansan/py-hanspell/spellList.txt");
-        if(file.exists())
-        {
+        if (file.exists()) {
             BufferedReader inFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "utf-8"));
             String sLine = "";
 
-            while( (sLine = inFile.readLine()) != null ){
+            while ((sLine = inFile.readLine()) != null) {
                 spellList.add(sLine);
             }
-            if (spellList.isEmpty()){
+            if (spellList.isEmpty()) {
                 System.out.println("Empty!");
-            }
-            else{
-                for(String o : spellList){
+            } else {
+                for (String o : spellList) {
                     System.out.println(o);
                 }
             }
