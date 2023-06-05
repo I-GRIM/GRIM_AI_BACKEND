@@ -1,6 +1,5 @@
 package capstone.book_grim_ai.controller;
 
-import capstone.book_grim_ai.dto.CreateVariationReqDto;
 import capstone.book_grim_ai.service.Service;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
@@ -9,12 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,44 +35,6 @@ public class Controller {
     @GetMapping
     public String test(){
         return "this is test";
-    }
-
-    @PostMapping(value = "/dreambooth", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = MediaType.IMAGE_JPEG_VALUE)
-    @ResponseStatus(value = HttpStatus.ACCEPTED)
-    public @ResponseBody byte[] createVariation(
-            @RequestBody CreateVariationReqDto createVariationReqDto
-    ) throws IOException {
-        String stableDiffusionPath = "/home/super/Desktop/stable-diffusion";
-        String configPath = stableDiffusionPath+"/configs/stable-diffusion/v1-inference.yaml";
-        String txt2imgPath = stableDiffusionPath + "/scripts/txt2img.py";
-        String outputPath = "/home/super/Desktop/dreambooth_results";
-        String resultImgPath = outputPath + "/result.png";
-        String checkpointPath = "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt";
-        String height = "256";
-        String width = "256";
-        File logs = new File("/home/super/Desktop/dreambooth_results/log");
-
-        log.debug("dreambooth prompt : " + createVariationReqDto.getPrompt());
-        try {
-            ProcessBuilder pb = new ProcessBuilder("python3", txt2imgPath, "--prompt",
-                    createVariationReqDto.getPrompt(), "--outdir", outputPath, "--n_samples", "3",
-                    "--H", height, "--W", width, "--ckpt", checkpointPath, "--n_iter", "1", "--config", configPath);
-            pb.redirectOutput(logs);
-            pb.redirectError(logs);
-            log.debug("start the process...");
-            Process stableDiffusion = pb.start();
-            stableDiffusion.waitFor();
-            log.debug("end process...");
-        } catch (InterruptedException e){
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
-        }
-        byte[] bytes = Files.readAllBytes(Paths.get(resultImgPath));
-        log.debug("response byte size : " + bytes.length);
-        return bytes;
     }
 
     @PostMapping(value = "",consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE}, produces = MediaType.IMAGE_JPEG_VALUE)
@@ -166,8 +127,8 @@ public class Controller {
             @RequestPart(value = "prompt") String prompt,
             @RequestPart(value = "back") MultipartFile back,
             @RequestPart(value = "character") MultipartFile character,
-            @RequestPart(value = "x") String x,
-            @RequestPart(value = "y") String y
+            @RequestPart(value = "x") int x,
+            @RequestPart(value = "y") int y
     ) throws IOException {
 
         // image remove 하는 거 먼저 실행
@@ -204,11 +165,7 @@ public class Controller {
             File mlogs = new File(cache_image_path+"mlog");
 
             log.debug("merge image...");
-	    // test 
-	    //
-
-	    log.debug(x+" "+y);
-            ProcessBuilder mg = new ProcessBuilder("python3", "/home/g0521sansan/image_processing/merge.py", back_file.getPath(),charac_file.getPath(),x,y);
+            ProcessBuilder mg = new ProcessBuilder("python3", "/home/g0521sansan/image_processing/merge.py", back_file.getPath(),charac_file.getPath(),Integer.toString(x),Integer.toString(y));
             mg.redirectOutput(mlogs);
             mg.redirectError(mlogs);
             Process merge = mg.start();
@@ -225,6 +182,37 @@ public class Controller {
 
         return bytes;
 	
+    }
+
+    @PostMapping(value ="/checkGrammar",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(value = HttpStatus.ACCEPTED)
+    public @ResponseBody ArrayList<String> checkGrammar(
+            @RequestPart(value = "content") String content
+    ) throws IOException {
+        ProcessBuilder check = new ProcessBuilder("python3", "/home/g0521sansan/py-hanspell/korean_check.py", "--text",content);
+        Process kocheck = check.start();
+        ArrayList<String> spellList = new ArrayList<String>();
+
+//        File file = new File("E:\\2023.1\\캡스톤\\py-hanspell\\spellList.txt");
+        File file = new File("/home/g0521sansan/py-hanspell/spellList.txt");
+        if(file.exists())
+        {
+            BufferedReader inFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "utf-8"));
+            String sLine = "";
+
+            while( (sLine = inFile.readLine()) != null ){
+                spellList.add(sLine);
+            }
+            if (spellList.isEmpty()){
+                System.out.println("Empty!");
+            }
+            else{
+                for(String o : spellList){
+                    System.out.println(o);
+                }
+            }
+        }
+        return spellList;
     }
 
 }
