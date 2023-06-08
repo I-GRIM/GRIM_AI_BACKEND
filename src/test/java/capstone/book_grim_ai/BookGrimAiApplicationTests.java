@@ -30,4 +30,11 @@ class BookGrimAiApplicationTests {
 			}
 		}
 	}
+
+	@Test
+	void subStringTest() {
+		String features = "\"crying, happy , running\"";
+		System.out.print("\"dongyeon_boy, "+features.substring(1,features.length()));
+
+	}
 }

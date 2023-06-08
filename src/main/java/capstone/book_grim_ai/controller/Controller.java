@@ -127,17 +127,15 @@ public class Controller {
             MediaType.MULTIPART_FORM_DATA_VALUE }, produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     public @ResponseBody byte[] createPage(
-            @RequestPart(value = "prompt") String prompt,
             @RequestPart(value = "back") MultipartFile back,
             @RequestPart(value = "character") MultipartFile character,
             @RequestPart(value = "x") int x,
-            @RequestPart(value = "y") int y) throws IOException {
-
-        // image remove 하는 거 먼저 실행
-        // 그 뒤에 merge
+            @RequestPart(value = "y") int y,
+            @RequestPart(value = "feautre") String feature) throws IOException {
         log.debug("start Page character...");
         try {
 
+            // 어차피 이미 모델에 캐릭터 학습 돼있는 상태라 제거해도 될듯
             String cache_image_path = "/home/g0521sansan/image_processing/cache_img/";
 
             log.debug("cahe" + cache_image_path);
@@ -147,6 +145,15 @@ public class Controller {
             log.debug("character img : " + character.getBytes());
             log.debug("character originalFileName : " + character.getOriginalFilename());
 
+            // create Character Variation test
+
+            String charac_image_path = characterVariation(
+                    FilenameUtils.removeExtension(character.getOriginalFilename()),
+                    feature);
+            log.debug(charac_image_path);
+
+            // cache_image_path -> chara_image_path 일단은 함수 구현 후 테스트하고 교체
+
             File back_file = new File(cache_image_path + back.getOriginalFilename());
             File charac_file = new File(cache_image_path + character.getOriginalFilename());
 
@@ -154,23 +161,13 @@ public class Controller {
             character.transferTo(charac_file);
 
             log.debug("created image file...");
-            // dreambooth part
-            // ProcessBuilder pb = new ProcessBuilder("sudo","python3.10",
-            // "/home/ControlNet-with-Anything-v4/book_grim.py", "-img",
-            // file.getPath(),"-p", prompt);
-            // pb.redirectOutput(logs);
-            // pb.redirectError(logs);
-            // Process controlnet = pb.start();
-            // log.debug("start the process...");
-            // controlnet.waitFor();
-            // log.debug("end process...");
             log.debug("end create image");
 
             File mlogs = new File(cache_image_path + "mlog");
 
             log.debug("merge image...");
             ProcessBuilder mg = new ProcessBuilder("python3", "/home/g0521sansan/image_processing/merge.py",
-                    back_file.getPath(), charac_file.getPath(), Integer.toString(x), Integer.toString(y));
+                    back_file.getPath(), charac_image_path, Integer.toString(x), Integer.toString(y));
             mg.redirectOutput(mlogs);
             mg.redirectError(mlogs);
             Process merge = mg.start();
@@ -218,5 +215,46 @@ public class Controller {
         }
         return spellList;
     }
+
+    public String characterVariation(String character, String features) throws IOException, InterruptedException {
+
+        String resultPath = "/home/super/Desktop/stable-diffusion/result.png";
+
+        ProcessBuilder variation = new ProcessBuilder(
+                "python3",
+                "/home/super/Desktop/stable-diffusion/scripts/txt2img.py",
+                "--prompt",
+                "\""+character+", "+features.substring(1,features.length()),
+                "--H",
+                "512",
+                "--W",
+                "512",
+                "--outdir",
+                "./",
+                "--n_samples",
+                "1",
+                "--ckpt",
+                "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt"
+        );
+
+        Process p = variation.start();
+        log.debug("start variation...");
+        p.waitFor();
+        log.debug("end variation...");
+        File logs = new File("/home/super/Desktop/stable-diffusion/result.png"+ "log");
+
+
+        ProcessBuilder rm = new ProcessBuilder("/usr/bin/python3", "/home/g0521sansan/image_processing/remove.py",
+                resultPath);
+        rm.redirectOutput(logs);
+        rm.redirectError(logs);
+        Process remove = rm.start();
+        remove.waitFor();
+
+        resultPath = "/home/g0521sansan/image_processing/cahce_img"+character+"_rm.png";
+        log.debug("After variation remove : "+resultPath);
+        return resultPath;
+    }
+
 
 }
