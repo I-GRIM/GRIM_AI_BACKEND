@@ -242,7 +242,7 @@ public class Controller {
         variation.redirectError(logs);
 
 
-        variation.redirectOutput()
+        variation.redirectOutput();
         Process p = variation.start();
         log.info("start variation...");
         p.waitFor();
