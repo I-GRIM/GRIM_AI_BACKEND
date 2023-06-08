@@ -219,12 +219,13 @@ public class Controller {
     public String characterVariation(String character, String features) throws IOException, InterruptedException {
 
         String resultPath = "/home/super/Desktop/stable-diffusion/result.png";
-        log.info("character features : "+features);
+
+        log.info("\""+character+", "+features.substring(1,features.length())+"\"");
         ProcessBuilder variation = new ProcessBuilder(
                 "python3",
                 "/home/super/Desktop/stable-diffusion/scripts/txt2img.py",
                 "--prompt",
-                "\""+character+", "+features.substring(1,features.length()),
+                "\""+character+", "+features.substring(1,features.length())+"\"",
                 "--H",
                 "512",
                 "--W",
