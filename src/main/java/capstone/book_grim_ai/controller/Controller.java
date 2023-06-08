@@ -256,7 +256,7 @@ public class Controller {
         Process remove = rm.start();
         remove.waitFor();
 
-        resultPath = "/home/g0521sansan/image_processing/cahce_img/"+character+"_rm.png";
+        resultPath = "/home/g0521sansan/image_processing/cache_img/"+character+"_rm.png";
         log.info("After variation remove : "+resultPath);
         return resultPath;
     }
