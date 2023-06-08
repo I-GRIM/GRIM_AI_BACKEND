@@ -131,26 +131,26 @@ public class Controller {
             @RequestPart(value = "character") MultipartFile character,
             @RequestPart(value = "x") int x,
             @RequestPart(value = "y") int y,
-            @RequestPart(value = "feautre") String feature) throws IOException {
+            @RequestPart(value = "feature") String feature) throws IOException {
         log.debug("start Page character...");
         try {
 
             // 어차피 이미 모델에 캐릭터 학습 돼있는 상태라 제거해도 될듯
             String cache_image_path = "/home/g0521sansan/image_processing/cache_img/";
 
-            log.debug("cahe" + cache_image_path);
-            log.debug("back img : " + back.getBytes());
-            log.debug("back originalFileName : " + back.getOriginalFilename());
+            log.info("cahe" + cache_image_path);
+            log.info("back img : " + back.getBytes());
+            log.info("back originalFileName : " + back.getOriginalFilename());
 
-            log.debug("character img : " + character.getBytes());
-            log.debug("character originalFileName : " + character.getOriginalFilename());
+            log.info("character img : " + character.getBytes());
+            log.info("character originalFileName : " + character.getOriginalFilename());
 
             // create Character Variation test
 
             String charac_image_path = characterVariation(
                     FilenameUtils.removeExtension(character.getOriginalFilename()),
                     feature);
-            log.debug(charac_image_path);
+            log.info(charac_image_path);
 
             // cache_image_path -> chara_image_path 일단은 함수 구현 후 테스트하고 교체
 
@@ -160,27 +160,27 @@ public class Controller {
             back.transferTo(back_file);
             character.transferTo(charac_file);
 
-            log.debug("created image file...");
-            log.debug("end create image");
+            log.info("created image file...");
+            log.info("end create image");
 
             File mlogs = new File(cache_image_path + "mlog");
 
-            log.debug("merge image...");
+            log.info("merge image...");
             ProcessBuilder mg = new ProcessBuilder("python3", "/home/g0521sansan/image_processing/merge.py",
                     back_file.getPath(), charac_image_path, Integer.toString(x), Integer.toString(y));
             mg.redirectOutput(mlogs);
             mg.redirectError(mlogs);
             Process merge = mg.start();
-            log.debug("start merge...");
+            log.info("start merge...");
             merge.waitFor();
-            log.debug("end merge...");
+            log.info("end merge...");
 
         } catch (InterruptedException e) {
             log.error(e.getMessage());
 
         }
         byte[] bytes = Files.readAllBytes(Paths.get("/home/g0521sansan/image_processing/story.png"));
-        log.debug("response... : " + bytes.toString());
+        log.info("response... : " + bytes.toString());
 
         return bytes;
 
@@ -238,9 +238,9 @@ public class Controller {
         );
 
         Process p = variation.start();
-        log.debug("start variation...");
+        log.info("start variation...");
         p.waitFor();
-        log.debug("end variation...");
+        log.info("end variation...");
         File logs = new File("/home/super/Desktop/stable-diffusion/result.png"+ "log");
 
 
@@ -252,7 +252,7 @@ public class Controller {
         remove.waitFor();
 
         resultPath = "/home/g0521sansan/image_processing/cahce_img"+character+"_rm.png";
-        log.debug("After variation remove : "+resultPath);
+        log.info("After variation remove : "+resultPath);
         return resultPath;
     }
 
