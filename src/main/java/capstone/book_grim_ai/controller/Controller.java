@@ -235,7 +235,10 @@ public class Controller {
                 "--n_samples",
                 "1",
                 "--ckpt",
-                "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt"
+                "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt",
+                "--config",
+                "/home/super/Desktop/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
+
         );
 
         File logs = new File("/home/super/Desktop/stable-diffusion/result.png"+ "log");
