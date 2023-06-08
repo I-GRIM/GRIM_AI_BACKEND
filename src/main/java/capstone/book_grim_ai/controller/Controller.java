@@ -219,7 +219,7 @@ public class Controller {
     public String characterVariation(String character, String features) throws IOException, InterruptedException {
 
         String resultPath = "/home/super/Desktop/stable-diffusion/result.png";
-
+        log.info("character features : "+features);
         ProcessBuilder variation = new ProcessBuilder(
                 "python3",
                 "/home/super/Desktop/stable-diffusion/scripts/txt2img.py",
@@ -237,21 +237,26 @@ public class Controller {
                 "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt"
         );
 
+        File logs = new File("/home/super/Desktop/stable-diffusion/result.png"+ "log");
+        variation.redirectOutput(logs);
+        variation.redirectError(logs);
+
+
+        variation.redirectOutput()
         Process p = variation.start();
         log.info("start variation...");
         p.waitFor();
         log.info("end variation...");
-        File logs = new File("/home/super/Desktop/stable-diffusion/result.png"+ "log");
+
 
 
         ProcessBuilder rm = new ProcessBuilder("/usr/bin/python3", "/home/g0521sansan/image_processing/remove.py",
                 resultPath);
-        rm.redirectOutput(logs);
-        rm.redirectError(logs);
+
         Process remove = rm.start();
         remove.waitFor();
 
-        resultPath = "/home/g0521sansan/image_processing/cahce_img"+character+"_rm.png";
+        resultPath = "/home/g0521sansan/image_processing/cahce_img/"+character+"_rm.png";
         log.info("After variation remove : "+resultPath);
         return resultPath;
     }
