@@ -135,15 +135,7 @@ public class Controller {
         log.debug("start Page character...");
         try {
 
-            // 어차피 이미 모델에 캐릭터 학습 돼있는 상태라 제거해도 될듯
             String cache_image_path = "/home/g0521sansan/image_processing/cache_img/";
-
-            log.info("cahe" + cache_image_path);
-            log.info("back img : " + back.getBytes());
-            log.info("back originalFileName : " + back.getOriginalFilename());
-
-            log.info("character img : " + character.getBytes());
-            log.info("character originalFileName : " + character.getOriginalFilename());
 
             // create Character Variation test
 
@@ -220,22 +212,23 @@ public class Controller {
 
         String resultPath = "/home/super/Desktop/stable-diffusion/result.png";
 
-        log.info("\""+character+", "+features.substring(1,features.length())+"\"");
+        log.info("\""+character+", "+features.substring(1,features.length()-1)+"\"");
         ProcessBuilder variation = new ProcessBuilder(
                 "python3",
                 "/home/super/Desktop/stable-diffusion/scripts/txt2img.py",
                 "--prompt",
-                "\""+character+", "+features.substring(1,features.length())+"\"",
+                "\""+"dongyeon_boy"+", "+features.substring(1,features.length()-1)+"\"",
                 "--H",
                 "512",
                 "--W",
                 "512",
                 "--outdir",
-                "./",
+                "/home/super/Desktop/stable-diffusion/",
                 "--n_samples",
                 "1",
                 "--ckpt",
-                "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt",
+                "/home/g0521sansan/GRIM_AI_BACKEND/anything_one.ckpt",
+//                "/home/super/Desktop/dreambooth/content/MyDrive/Fast-Dreambooth/Sessions/character/character.ckpt",
                 "--config",
                 "/home/super/Desktop/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
 
@@ -264,5 +257,5 @@ public class Controller {
         log.info("After variation remove : "+resultPath);
         return resultPath;
     }
-    
+
 }
